@@ -9,6 +9,6 @@ export class User {
   email?: string;
   @IsString()
   password?: string;
-  imagePath?: string;
+  phone?: string;
   role?: Role;
 }

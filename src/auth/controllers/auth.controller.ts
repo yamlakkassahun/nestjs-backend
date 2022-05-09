@@ -3,35 +3,30 @@ import {
   Get,
   Post,
   Body,
-  Patch,
-  Param,
-  Delete,
-  Request,
   UseGuards,
-  UseInterceptors,
-  UploadedFile,
   HttpCode,
   HttpStatus,
+  Param,
+  Put,
+  Delete,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { join } from 'path';
-import { map, Observable, of } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { GetUser } from '../decorators/get.user.decorator';
 import { Roles } from '../decorators/roles.decorator';
+import { CreateAuthDto } from '../dto/create-auth.dto';
+import { UpdateAuthDto } from '../dto/update-auth.dto';
 import { Auth } from '../entities/auth.entity';
 import { Role } from '../entities/role.enum';
 import { JwtGuard } from '../guards/jwt.guard';
 import { RolesGuard } from '../guards/roles.guard';
-import { isFileExtensionSafe, removeFile } from '../helpers/image-storage';
 import { AuthService } from '../services/auth.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('register')
-  register(@Body() user: Auth): Observable<Auth> {
+  @Post('register-account')
+  registerAccount(@Body() user: Auth): Observable<Auth> {
     console.log(user);
     return this.authService.registerAccount(user);
   }
@@ -51,5 +46,35 @@ export class AuthController {
   getAdmin(@GetUser() user: Auth) {
     console.log(user);
     return 'user';
+  }
+
+  @Get()
+  getAllUsers(): Observable<Auth[]> {
+    return this.authService.findAllUsers();
+  }
+
+  @Get(':id')
+  getUserById(@Param('id') id: string): Observable<Auth> {
+    return this.authService.findUserById(id);
+  }
+
+  @Post('register')
+  register(@Body() user: CreateAuthDto): Observable<Auth> {
+    return this.authService.registerUser(user);
+  }
+
+  @UseGuards(JwtGuard)
+  @Put(':id/update')
+  update(
+    @Param('id') id: string,
+    @Body() user: UpdateAuthDto,
+  ): Observable<Auth> {
+    return this.authService.updateUser(id, user);
+  }
+
+  @UseGuards(JwtGuard)
+  @Delete(':id')
+  delete(@Param('id') id: string): Observable<Auth> {
+    return this.authService.deleteUser(id);
   }
 }

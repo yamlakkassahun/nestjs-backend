@@ -6,6 +6,7 @@ import { Auth, AuthDocument } from '../entities/auth.entity';
 import * as bcrypt from 'bcrypt';
 import { from, Observable, of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { UpdateAuthDto } from '../dto/update-auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -27,7 +28,7 @@ export class AuthService {
   }
 
   registerAccount(user: Auth): Observable<Auth> {
-    const { email, password, address, firstName, lastName, phone } = user;
+    const { email, password, address, firstName, lastName, phone, role } = user;
 
     return this.doesUserExist(email).pipe(
       tap((doesUserExist: boolean) => {
@@ -47,6 +48,7 @@ export class AuthService {
                 email,
                 address,
                 phone,
+                role,
                 password: hashedPassword,
               }),
             ).pipe(
@@ -106,5 +108,85 @@ export class AuthService {
         return of(null);
       }),
     );
+  }
+
+  findAllUsers(): Observable<Auth[] | any> {
+    return from(this.userModel.find());
+  }
+
+  findUserById(id: string): Observable<Auth> {
+    return from(this.userModel.findById(id)).pipe(
+      map((user) => {
+        if (!user) {
+          throw new HttpException(
+            { status: HttpStatus.FORBIDDEN, error: 'User Was Not Found' },
+            HttpStatus.FORBIDDEN,
+          );
+        }
+        return user;
+      }),
+    );
+  }
+
+  registerUser(user: Auth): Observable<Auth> {
+    const { email, password, address, firstName, lastName, phone } = user;
+
+    return this.doesUserExist(email).pipe(
+      tap((doesUserExist: boolean) => {
+        if (doesUserExist)
+          throw new HttpException(
+            'A user has already been created with this email address',
+            HttpStatus.BAD_REQUEST,
+          );
+      }),
+      switchMap(() => {
+        return this.hashPassword(password).pipe(
+          switchMap((hashedPassword: string) => {
+            return from(
+              this.userModel.create({
+                firstName,
+                lastName,
+                email,
+                address,
+                phone,
+                password: hashedPassword,
+              }),
+            ).pipe(
+              map((user: Auth) => {
+                return user;
+              }),
+            );
+          }),
+        );
+      }),
+    );
+  }
+
+  updateUser(id: string, user: UpdateAuthDto): Observable<Auth> {
+    const { email, password, address, firstName, lastName, phone } = user;
+
+    return from(this.userModel.findById(id)).pipe(
+      map((user) => {
+        if (!user) {
+          throw new HttpException(
+            { status: HttpStatus.FORBIDDEN, error: 'User Was Not Found' },
+            HttpStatus.FORBIDDEN,
+          );
+        }
+
+        user.email = email;
+        user.password = password;
+        user.address = address;
+        user.firstName = firstName;
+        user.lastName = lastName;
+        user.phone = phone;
+        user.save();
+        return user;
+      }),
+    );
+  }
+
+  deleteUser(id: string): Observable<Auth> {
+    return from(this.userModel.findByIdAndDelete(id));
   }
 }
