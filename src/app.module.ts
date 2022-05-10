@@ -10,6 +10,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { AllExceptionsFilter } from './core/all-exceptions.filter';
+import { FeedsModule } from './feeds/feeds.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { AllExceptionsFilter } from './core/all-exceptions.filter';
       inject: [ConfigService],
     }),
     AuthModule,
+    FeedsModule,
   ],
   controllers: [AppController],
   providers: [

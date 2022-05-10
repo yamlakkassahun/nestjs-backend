@@ -5,7 +5,6 @@ import { Observable } from 'rxjs';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { Auth } from '../entities/auth.entity';
 import { Role } from '../entities/role.enum';
-import { User } from '../entities/user.class';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
