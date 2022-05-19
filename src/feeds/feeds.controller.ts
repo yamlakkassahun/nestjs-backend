@@ -15,12 +15,16 @@ import { JwtGuard } from 'src/auth/guards/jwt.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from 'src/auth/entities/role.enum';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('feeds')
 export class FeedsController {
   constructor(private readonly feedsService: FeedsService) {}
 
   @Post()
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard, RolesGuard)
+  @Roles(Role.USER, Role.ADMIN)
   create(@Body() createFeedDto: CreateFeedDto) {
     return this.feedsService.create(createFeedDto);
   }
