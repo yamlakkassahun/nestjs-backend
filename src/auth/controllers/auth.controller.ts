@@ -10,6 +10,7 @@ import {
   Put,
   Delete,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { map, Observable } from 'rxjs';
 import { GetUser } from '../decorators/get.user.decorator';
 import { Roles } from '../decorators/roles.decorator';
@@ -25,13 +26,12 @@ import { AuthService } from '../services/auth.service';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('register-account')
-  registerAccount(@Body() user: Auth): Observable<Auth> {
-    console.log(user);
+  @Post('signup')
+  registerAccount(@Body() user: CreateAuthDto): Observable<Auth> {
     return this.authService.registerAccount(user);
   }
 
-  @Post('login')
+  @Post('signin')
   @HttpCode(HttpStatus.OK)
   login(@Body() user: Auth): Observable<{ token: string }> {
     return this.authService
@@ -41,7 +41,7 @@ export class AuthController {
 
   @UseGuards(JwtGuard, RolesGuard)
   @Roles(Role.USER, Role.ADMIN)
-  // @UseGuards(JwtGuard)
+  @ApiBearerAuth()
   @Get('user')
   getAdmin(@GetUser() user: Auth) {
     console.log(user);
@@ -49,22 +49,29 @@ export class AuthController {
   }
 
   @Get()
+  @UseGuards(JwtGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   getAllUsers(): Observable<Auth[]> {
     return this.authService.findAllUsers();
   }
 
   @Get(':id')
+  @UseGuards(JwtGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   getUserById(@Param('id') id: string): Observable<Auth> {
     return this.authService.findUserById(id);
   }
 
   @Post('register')
+  @UseGuards(JwtGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   register(@Body() user: CreateAuthDto): Observable<Auth> {
     return this.authService.registerUser(user);
   }
 
-  @UseGuards(JwtGuard)
   @Put(':id/update')
+  @UseGuards(JwtGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   update(
     @Param('id') id: string,
     @Body() user: UpdateAuthDto,
@@ -72,8 +79,9 @@ export class AuthController {
     return this.authService.updateUser(id, user);
   }
 
-  @UseGuards(JwtGuard)
   @Delete(':id')
+  @UseGuards(JwtGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   delete(@Param('id') id: string): Observable<Auth> {
     return this.authService.deleteUser(id);
   }

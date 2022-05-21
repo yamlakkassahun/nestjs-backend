@@ -7,6 +7,8 @@ import * as bcrypt from 'bcrypt';
 import { from, Observable, of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { UpdateAuthDto } from '../dto/update-auth.dto';
+import { Role } from '../entities/role.enum';
+import { CreateAuthDto } from '../dto/create-auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -27,7 +29,7 @@ export class AuthService {
     );
   }
 
-  registerAccount(user: Auth): Observable<Auth> {
+  registerAccount(user: CreateAuthDto): Observable<Auth> {
     const { email, password, address, firstName, lastName, phone, role } = user;
 
     return this.doesUserExist(email).pipe(
@@ -39,6 +41,14 @@ export class AuthService {
           );
       }),
       switchMap(() => {
+        let userRole = Role.USER;
+        if (role === 'admin') {
+          userRole = Role.ADMIN;
+        } else if (role === 'super') {
+          userRole = Role.SUPER;
+        }
+
+        // userRole = role === "admin" ? : Role.USER;
         return this.hashPassword(password).pipe(
           switchMap((hashedPassword: string) => {
             return from(
@@ -48,7 +58,7 @@ export class AuthService {
                 email,
                 address,
                 phone,
-                role,
+                role: userRole,
                 password: hashedPassword,
               }),
             ).pipe(
