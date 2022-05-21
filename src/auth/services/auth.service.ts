@@ -22,7 +22,7 @@ export class AuthService {
     return from(bcrypt.hash(password, 12));
   }
 
-  async doesUserExist(email: string): Promise<Observable<boolean>> {
+  doesUserExist(email: string): Observable<boolean> {
     return from(this.userModel.findOne({ email })).pipe(
       switchMap((user: Auth) => {
         return of(!!user);
@@ -138,10 +138,10 @@ export class AuthService {
     );
   }
 
-  async registerUser(user: Auth): Promise<Observable<Auth>> {
+  registerUser(user: Auth): Observable<Auth> {
     const { email, password, address, firstName, lastName, phone } = user;
 
-    return (await this.doesUserExist(email)).pipe(
+    return this.doesUserExist(email).pipe(
       tap((doesUserExist: boolean) => {
         if (doesUserExist)
           throw new HttpException(
@@ -172,7 +172,7 @@ export class AuthService {
     );
   }
 
-  async updateUser(id: string, user: UpdateAuthDto): Promise<Observable<Auth>> {
+  updateUser(id: string, user: UpdateAuthDto): Observable<Auth> {
     const { email, password, address, firstName, lastName, phone, role } = user;
 
     return this.hashPassword(password).pipe(

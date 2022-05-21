@@ -65,7 +65,7 @@ export class AuthController {
   @Post('register')
   @UseGuards(JwtGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  register(@Body() user: CreateAuthDto): Promise<Observable<Auth>> {
+  register(@Body() user: CreateAuthDto): Observable<Auth> {
     return this.authService.registerUser(user);
   }
 
@@ -75,7 +75,7 @@ export class AuthController {
   update(
     @Param('id') id: string,
     @Body() user: UpdateAuthDto,
-  ): Promise<Observable<Auth>> {
+  ): Observable<Auth> {
     return this.authService.updateUser(id, user);
   }
 
