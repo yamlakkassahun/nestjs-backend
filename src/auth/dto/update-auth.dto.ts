@@ -14,7 +14,7 @@ export class UpdateAuthDto extends PartialType(CreateAuthDto) {
 
   @IsString()
   @ApiProperty({ description: 'role' }) // this will give the schema to the swagger api
-  role: Role;
+  role: Role = Role.USER;
 
   @IsString()
   @ApiProperty({ type: String, description: 'firstName' }) // this will give the schema to the swagger api

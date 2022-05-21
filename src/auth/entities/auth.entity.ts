@@ -33,7 +33,7 @@ export class Auth {
   @Prop()
   lastName: string;
 
-  @Prop({ enum: Role, default: Role.ADMIN })
+  @Prop({ required: true, enum: Role, default: Role.ADMIN })
   role: Role;
 
   @Prop({ required: true })

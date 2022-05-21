@@ -9,6 +9,7 @@ import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { UpdateAuthDto } from '../dto/update-auth.dto';
 import { Role } from '../entities/role.enum';
 import { CreateAuthDto } from '../dto/create-auth.dto';
+import { UpdatePasswordDto } from '../dto/update-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -21,7 +22,7 @@ export class AuthService {
     return from(bcrypt.hash(password, 12));
   }
 
-  doesUserExist(email: string): Observable<boolean> {
+  async doesUserExist(email: string): Promise<Observable<boolean>> {
     return from(this.userModel.findOne({ email })).pipe(
       switchMap((user: Auth) => {
         return of(!!user);
@@ -29,10 +30,10 @@ export class AuthService {
     );
   }
 
-  registerAccount(user: CreateAuthDto): Observable<Auth> {
+  async registerAccount(user: CreateAuthDto): Promise<Observable<Auth>> {
     const { email, password, address, firstName, lastName, phone, role } = user;
 
-    return this.doesUserExist(email).pipe(
+    return (await this.doesUserExist(email)).pipe(
       tap((doesUserExist: boolean) => {
         if (doesUserExist)
           throw new HttpException(
@@ -48,7 +49,6 @@ export class AuthService {
           userRole = Role.SUPER;
         }
 
-        // userRole = role === "admin" ? : Role.USER;
         return this.hashPassword(password).pipe(
           switchMap((hashedPassword: string) => {
             return from(
@@ -138,10 +138,10 @@ export class AuthService {
     );
   }
 
-  registerUser(user: Auth): Observable<Auth> {
+  async registerUser(user: Auth): Promise<Observable<Auth>> {
     const { email, password, address, firstName, lastName, phone } = user;
 
-    return this.doesUserExist(email).pipe(
+    return (await this.doesUserExist(email)).pipe(
       tap((doesUserExist: boolean) => {
         if (doesUserExist)
           throw new HttpException(
@@ -172,26 +172,60 @@ export class AuthService {
     );
   }
 
-  updateUser(id: string, user: UpdateAuthDto): Observable<Auth> {
-    const { email, password, address, firstName, lastName, phone } = user;
+  async updateUser(id: string, user: UpdateAuthDto): Promise<Observable<Auth>> {
+    const { email, password, address, firstName, lastName, phone, role } = user;
 
-    return from(this.userModel.findById(id)).pipe(
-      map((user) => {
-        if (!user) {
-          throw new HttpException(
-            { status: HttpStatus.FORBIDDEN, error: 'User Was Not Found' },
-            HttpStatus.FORBIDDEN,
-          );
-        }
+    return this.hashPassword(password).pipe(
+      switchMap((hashedPassword: string) => {
+        return from(this.userModel.findById(id)).pipe(
+          map((user) => {
+            let userRole = Role.USER;
+            if (role === 'admin') {
+              userRole = Role.ADMIN;
+            } else if (role === 'super') {
+              userRole = Role.SUPER;
+            }
 
-        user.email = email;
-        user.password = password;
-        user.address = address;
-        user.firstName = firstName;
-        user.lastName = lastName;
-        user.phone = phone;
-        user.save();
-        return user;
+            if (!user) {
+              throw new HttpException(
+                { status: HttpStatus.FORBIDDEN, error: 'User Was Not Found' },
+                HttpStatus.FORBIDDEN,
+              );
+            }
+
+            user.email = email;
+            user.password = hashedPassword;
+            user.address = address;
+            user.firstName = firstName;
+            user.lastName = lastName;
+            user.role = userRole;
+            user.phone = phone;
+            user.save();
+            return user;
+          }),
+        );
+      }),
+    );
+  }
+  //password update
+  ChangePassword(user: any, updatePasswordDto: UpdatePasswordDto) {
+    const { oldPassword, newPassword } = updatePasswordDto;
+    return this.hashPassword(newPassword).pipe(
+      switchMap((hashedPassword: string) => {
+        return from(this.userModel.findById(user._id)).pipe(
+          map((user) => {
+            if (!user && bcrypt.compare(oldPassword, user.password)) {
+              throw new HttpException(
+                { status: HttpStatus.FORBIDDEN, error: 'User Was Not Found' },
+                HttpStatus.FORBIDDEN,
+              );
+            }
+
+            user.password = hashedPassword;
+            user.save();
+            return user;
+          }),
+        );
       }),
     );
   }
