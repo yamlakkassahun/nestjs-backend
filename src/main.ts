@@ -25,21 +25,10 @@ async function bootstrap() {
       'his project is a starter nest-js project template that include authentication with jwt and authorization with role gurde with mail functionality that is build with express server and mongodb as a data base',
     )
     .setVersion('1.0')
-   // .addBearerAuth(
-     // {
-       // type: 'http',
-       // scheme: 'bearer',
-       // bearerFormat: 'JWT',
-       // name: 'JWT',
-        //description: 'Enter JWT token',
-        //in: 'header',
-      //},
-      //'JWT-auth',  This name here is important for matching up with @ApiBearerAuth() in your controller!
-    //)
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000);
+  await app.listen(4000);
 }
 bootstrap();

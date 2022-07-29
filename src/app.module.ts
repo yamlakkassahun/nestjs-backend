@@ -11,6 +11,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { AllExceptionsFilter } from './core/all-exceptions.filter';
 import { FeedsModule } from './feeds/feeds.module';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { FeedsModule } from './feeds/feeds.module';
     }),
     AuthModule,
     FeedsModule,
+    MessagesModule,
   ],
   controllers: [AppController],
   providers: [
